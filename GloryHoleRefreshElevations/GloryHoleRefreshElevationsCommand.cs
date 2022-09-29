@@ -40,13 +40,23 @@ namespace GloryHoleRefreshElevations
                 {
                     intersectionPoint.get_Parameter(heightOfBaseLevelGuid).Set((doc.GetElement(intersectionPoint.LevelId) as Level).Elevation);
                     if(intersectionPoint.Symbol.FamilyName == "Пересечение_Плита_Прямоугольное"
-                        || intersectionPoint.Symbol.FamilyName == "Пересечение_Плита_Круглое"
-                        || intersectionPoint.Symbol.FamilyName == "Отверстие_Плита_Прямоугольное"
-                        || intersectionPoint.Symbol.FamilyName == "Отверстие_Плита_Круглое"
-                        || intersectionPoint.Symbol.FamilyName == "Гильза_Плита")
+                        || intersectionPoint.Symbol.FamilyName == "Пересечение_Плита_Круглое")
 
                     {
                         intersectionPoint.get_Parameter(levelOffsetGuid).Set(intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsDouble() - 50 / 304.8);
+                    }
+                    else if(intersectionPoint.Symbol.FamilyName == "Отверстие_Плита_Прямоугольное"
+                        || intersectionPoint.Symbol.FamilyName == "Отверстие_Плита_Круглое"
+                        || intersectionPoint.Symbol.FamilyName == "Гильза_Плита")
+                    {
+                        if (intersectionPoint.Host != null)
+                        {
+                            intersectionPoint.get_Parameter(levelOffsetGuid).Set(doc.GetElement(intersectionPoint.Host.Id).get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM).AsDouble());
+                        }
+                        else
+                        {
+                            intersectionPoint.get_Parameter(levelOffsetGuid).Set(0);
+                        }
                     }
                     else
                     {
