@@ -24,7 +24,13 @@ namespace GloryHoleRefreshElevations
                 .Where(ip => ip.Symbol.Family.Name == "Пересечение_Стена_Прямоугольное"
                 || ip.Symbol.Family.Name == "Пересечение_Стена_Круглое"
                 || ip.Symbol.Family.Name == "Пересечение_Плита_Прямоугольное"
-                || ip.Symbol.Family.Name == "Пересечение_Плита_Круглое")
+                || ip.Symbol.Family.Name == "Пересечение_Плита_Круглое"
+                || ip.Symbol.Family.Name == "Отверстие_Стена_Прямоугольное"
+                || ip.Symbol.Family.Name == "Отверстие_Стена_Круглое"
+                || ip.Symbol.Family.Name == "Отверстие_Плита_Прямоугольное"
+                || ip.Symbol.Family.Name == "Отверстие_Плита_Круглое"
+                || ip.Symbol.Family.Name == "Гильза_Стена"
+                || ip.Symbol.Family.Name == "Гильза_Плита")
                 .ToList();
 
             using (Transaction t = new Transaction(doc))
@@ -34,7 +40,11 @@ namespace GloryHoleRefreshElevations
                 {
                     intersectionPoint.get_Parameter(heightOfBaseLevelGuid).Set((doc.GetElement(intersectionPoint.LevelId) as Level).Elevation);
                     if(intersectionPoint.Symbol.FamilyName == "Пересечение_Плита_Прямоугольное"
-                        || intersectionPoint.Symbol.FamilyName == "Пересечение_Плита_Круглое")
+                        || intersectionPoint.Symbol.FamilyName == "Пересечение_Плита_Круглое"
+                        || intersectionPoint.Symbol.FamilyName == "Отверстие_Плита_Прямоугольное"
+                        || intersectionPoint.Symbol.FamilyName == "Отверстие_Плита_Круглое"
+                        || intersectionPoint.Symbol.FamilyName == "Гильза_Плита")
+
                     {
                         intersectionPoint.get_Parameter(levelOffsetGuid).Set(intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsDouble() - 50 / 304.8);
                     }
