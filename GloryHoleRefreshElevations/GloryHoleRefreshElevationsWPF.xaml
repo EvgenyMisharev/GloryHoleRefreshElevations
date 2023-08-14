@@ -5,22 +5,22 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:GloryHoleRefreshElevations"
              mc:Ignorable="d" 
-             Title="Обновить отметки"
-             WindowStyle="SingleBorderWindow" ResizeMode="NoResize" Icon="Resources/citrus.ico" WindowStartupLocation="CenterScreen"
-             Height="150" Width="350" MinHeight="150" MinWidth="350" MaxHeight="150" MaxWidth="350"
-             KeyDown="GloryHoleRefreshElevationsWPF_KeyDown">
+             Title="Обновить отметки" Height="160" Width="400" 
+             MinHeight="160" MinWidth="400" MaxHeight="160" MaxWidth="400"
+             WindowStyle="SingleBorderWindow" ResizeMode="NoResize" Icon="Resources/citrus.ico" WindowStartupLocation="CenterScreen" KeyDown="GloryHoleRefreshElevationsWPF_KeyDown">
     <Grid>
-        <GroupBox x:Name="groupBox_RefreshElevations" Header="Обновить отметки элементов:" Height="60" Margin="10,10,10,0" VerticalAlignment="Top" BorderBrush="#FFABADB3">
+        <GroupBox x:Name="groupBox_RefreshElevationsOption" Header="Выберите опцию:" Margin="10,10,10,50">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="175*"/>
-                    <ColumnDefinition Width="175*"/>
+                    <ColumnDefinition Width="200*"/>
+                    <ColumnDefinition Width="200*"/>
                 </Grid.ColumnDefinitions>
-                <RadioButton x:Name="radioButton_All" Content="Всех" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True" Height="25" Width="45" VerticalContentAlignment="Center" Grid.Column="0"/>
-                <RadioButton x:Name="radioButton_Selected" Content="Выбранных" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="1" Width="100" Height="25" VerticalContentAlignment="Center"/>
+                <RadioButton x:Name="rbt_AllProject" Content="Во всем проекте" Margin="10,10,0,10" IsChecked="True" HorizontalAlignment="Center" VerticalContentAlignment="Center" Padding="5,0,0,0" VerticalAlignment="Center"/>
+                <RadioButton x:Name="rbt_SelectedItems" Content="В выбранных элементах" Grid.Column="1" Margin="10,10,0,10" HorizontalAlignment="Center" VerticalContentAlignment="Center" Padding="5,0,0,0" VerticalAlignment="Center"/>
             </Grid>
         </GroupBox>
+
         <Button x:Name="btn_Ok" Content="Ок" HorizontalAlignment="Right" Margin="0,0,125,10" VerticalAlignment="Bottom" Width="100" Height="25" Click="btn_Ok_Click"/>
-        <Button x:Name="btn_Cancel" Content="Отмена" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="100" Height="25" Click="btn_Cancel_Click" Grid.Column="1" Grid.Row="1"/>
+        <Button x:Name="btn_Cancel" Content="Отмена" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="100" Height="25" Click="btn_Cancel_Click"/>
     </Grid>
 </Window>

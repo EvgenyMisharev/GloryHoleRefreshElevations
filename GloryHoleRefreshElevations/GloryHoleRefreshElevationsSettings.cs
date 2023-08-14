@@ -1,12 +1,18 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace GloryHoleRefreshElevations
 {
     public class GloryHoleRefreshElevationsSettings
     {
-        public string RefreshElevationsButtonName { get; set; }
-        public GloryHoleRefreshElevationsSettings GetSettings()
+        public string RefreshElevationsOptionButtonName { get; set; }
+
+        public static GloryHoleRefreshElevationsSettings GetSettings()
         {
             GloryHoleRefreshElevationsSettings gloryHoleRefreshElevationsSettings = null;
             string assemblyPathAll = System.Reflection.Assembly.GetExecutingAssembly().Location;

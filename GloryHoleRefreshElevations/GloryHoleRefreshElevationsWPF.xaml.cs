@@ -1,65 +1,77 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
 
 namespace GloryHoleRefreshElevations
 {
     public partial class GloryHoleRefreshElevationsWPF : Window
     {
-        public string RefreshElevationsButtonName;
-        GloryHoleRefreshElevationsSettings GloryHoleRefreshElevationsSettingsItem;
+        public string RefreshElevationsOptionButtonName;
+        GloryHoleRefreshElevationsSettings GloryHoleRefreshElevationsSettingsItem = null;
         public GloryHoleRefreshElevationsWPF()
         {
-            GloryHoleRefreshElevationsSettingsItem = new GloryHoleRefreshElevationsSettings().GetSettings();
+            GloryHoleRefreshElevationsSettingsItem = GloryHoleRefreshElevationsSettings.GetSettings();
             InitializeComponent();
 
             if (GloryHoleRefreshElevationsSettingsItem != null)
             {
-                if (GloryHoleRefreshElevationsSettingsItem.RefreshElevationsButtonName == "radioButton_Selected")
+                if (GloryHoleRefreshElevationsSettingsItem.RefreshElevationsOptionButtonName == "rbt_AllProject")
                 {
-                    radioButton_Selected.IsChecked = true;
+                    rbt_AllProject.IsChecked = true;
                 }
                 else
                 {
-                    radioButton_All.IsChecked = true;
+                    rbt_SelectedItems.IsChecked = true;
                 }
             }
         }
         private void btn_Ok_Click(object sender, RoutedEventArgs e)
         {
             SaveSettings();
-            this.DialogResult = true;
-            this.Close();
+            DialogResult = true;
+            Close();
+        }
+        private void btn_Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
         }
         private void GloryHoleRefreshElevationsWPF_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter || e.Key == Key.Space)
             {
                 SaveSettings();
-                this.DialogResult = true;
-                this.Close();
+                DialogResult = true;
+                Close();
             }
 
             else if (e.Key == Key.Escape)
             {
-                this.DialogResult = false;
-                this.Close();
+                DialogResult = false;
+                Close();
             }
-        }
-        private void btn_Cancel_Click(object sender, RoutedEventArgs e)
-        {
-            this.DialogResult = false;
-            this.Close();
         }
         private void SaveSettings()
         {
             GloryHoleRefreshElevationsSettingsItem = new GloryHoleRefreshElevationsSettings();
-            RefreshElevationsButtonName = (this.groupBox_RefreshElevations.Content as Grid)
+
+            RefreshElevationsOptionButtonName = (groupBox_RefreshElevationsOption.Content as Grid)
                 .Children.OfType<RadioButton>()
                 .FirstOrDefault(rb => rb.IsChecked.Value == true)
                 .Name;
-            GloryHoleRefreshElevationsSettingsItem.RefreshElevationsButtonName = RefreshElevationsButtonName;
+
+            GloryHoleRefreshElevationsSettingsItem.RefreshElevationsOptionButtonName = RefreshElevationsOptionButtonName;
             GloryHoleRefreshElevationsSettingsItem.SaveSettings();
         }
     }
