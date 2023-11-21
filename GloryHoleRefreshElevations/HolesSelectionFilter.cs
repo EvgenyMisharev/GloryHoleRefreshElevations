@@ -1,10 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI.Selection;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GloryHoleRefreshElevations
 {
@@ -28,7 +24,7 @@ namespace GloryHoleRefreshElevations
             {
                 return true;
             }
-            else if(elem is FamilyInstance
+            else if (elem is FamilyInstance
                 && elem.Category.Id.IntegerValue.Equals((int)BuiltInCategory.OST_Windows)
                 && ((elem as FamilyInstance).Symbol.FamilyName == "231_Отверстие прямоугольное (Окно_Стена)"
                 || (elem as FamilyInstance).Symbol.Family.Name == "231_Отверстие круглое с гильзой в стене (Окно_Стена)"))
