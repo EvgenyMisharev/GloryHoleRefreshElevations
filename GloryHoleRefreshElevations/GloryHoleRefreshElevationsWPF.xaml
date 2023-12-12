@@ -5,11 +5,11 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:GloryHoleRefreshElevations"
              mc:Ignorable="d" 
-             Title="Обновить отметки" Height="160" Width="400" 
-             MinHeight="160" MinWidth="400" MaxHeight="160" MaxWidth="400"
+             Title="Обновить отметки" Height="250" Width="400" 
+             MinHeight="250" MinWidth="400" MaxHeight="250" MaxWidth="400"
              WindowStyle="SingleBorderWindow" ResizeMode="NoResize" Icon="Resources/citrus.ico" WindowStartupLocation="CenterScreen" KeyDown="GloryHoleRefreshElevationsWPF_KeyDown">
     <Grid>
-        <GroupBox x:Name="groupBox_RefreshElevationsOption" Header="Выберите опцию:" Margin="10,10,10,50">
+        <GroupBox x:Name="groupBox_RefreshElevationsOption" Header="Выберите опцию:" Margin="10,10,10,50" VerticalAlignment="Top" BorderBrush="#FFABADB3" Height="60">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="200*"/>
@@ -17,6 +17,21 @@
                 </Grid.ColumnDefinitions>
                 <RadioButton x:Name="rbt_AllProject" Content="Во всем проекте" Margin="10,10,0,10" IsChecked="True" HorizontalAlignment="Center" VerticalContentAlignment="Center" Padding="5,0,0,0" VerticalAlignment="Center"/>
                 <RadioButton x:Name="rbt_SelectedItems" Content="В выбранных элементах" Grid.Column="1" Margin="10,10,0,10" HorizontalAlignment="Center" VerticalContentAlignment="Center" Padding="5,0,0,0" VerticalAlignment="Center"/>
+            </Grid>
+        </GroupBox>
+
+        <Label x:Name="label_RoundHolePosition" Content="Округлять положение отверстий до:" HorizontalAlignment="Left" Margin="10,140,0,0" VerticalAlignment="Top" Width="210" Height="26" VerticalContentAlignment="Center" IsEnabled="False"/>
+        <TextBox x:Name="textBox_RoundHolePositionIncrement" HorizontalAlignment="Left" Height="26" Margin="220,140,0,0" TextWrapping="Wrap" Text="5" VerticalAlignment="Top" Width="40" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" IsEnabled="False" SpellCheck.IsEnabled="True"/>
+        <Label x:Name="label_RoundHolePositionMM" Content="мм" HorizontalAlignment="Left" Margin="260,140,0,0" VerticalAlignment="Top" Width="30" Height="26" VerticalContentAlignment="Center" IsEnabled="False"/>
+
+        <GroupBox x:Name="groupBox_RoundHolesPosition" Header="Округлять отметки отверстий в стенах:" Height="60" Margin="10,75,10,0" VerticalAlignment="Top" BorderBrush="#FFABADB3">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="175*"/>
+                    <ColumnDefinition Width="175*"/>
+                </Grid.ColumnDefinitions>
+                <RadioButton x:Name="radioButton_RoundHolesPositionYes" Content="Да" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True" Height="25" Width="45" VerticalContentAlignment="Center" Checked="radioButton_RoundHolesPosition_Checked" Grid.Column="0" />
+                <RadioButton x:Name="radioButton_RoundHolesPositionNo" Content="Нет" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="1" Width="45" Height="25" VerticalContentAlignment="Center" IsChecked="True" Checked="radioButton_RoundHolesPosition_Checked"/>
             </Grid>
         </GroupBox>
 

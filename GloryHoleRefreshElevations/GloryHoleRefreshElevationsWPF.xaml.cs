@@ -7,6 +7,9 @@ namespace GloryHoleRefreshElevations
 {
     public partial class GloryHoleRefreshElevationsWPF : Window
     {
+        public string RoundHolesPositionButtonName;
+        public double RoundHolePositionIncrement;
+
         public string RefreshElevationsOptionButtonName;
         GloryHoleRefreshElevationsSettings GloryHoleRefreshElevationsSettingsItem = null;
         public GloryHoleRefreshElevationsWPF()
@@ -23,6 +26,24 @@ namespace GloryHoleRefreshElevations
                 else
                 {
                     rbt_SelectedItems.IsChecked = true;
+                }
+
+                if (GloryHoleRefreshElevationsSettingsItem.RoundHolesPositionButtonName == "radioButton_RoundHolesPositionYes")
+                {
+                    radioButton_RoundHolesPositionYes.IsChecked = true;
+                }
+                else
+                {
+                    radioButton_RoundHolesPositionNo.IsChecked = true;
+                }
+
+                if (GloryHoleRefreshElevationsSettingsItem.RoundHolePositionIncrementValue != null)
+                {
+                    textBox_RoundHolePositionIncrement.Text = GloryHoleRefreshElevationsSettingsItem.RoundHolePositionIncrementValue;
+                }
+                else
+                {
+                    textBox_RoundHolePositionIncrement.Text = "5";
                 }
             }
         }
@@ -52,6 +73,25 @@ namespace GloryHoleRefreshElevations
                 Close();
             }
         }
+        private void radioButton_RoundHolesPosition_Checked(object sender, RoutedEventArgs e)
+        {
+            RoundHolesPositionButtonName = (this.groupBox_RoundHolesPosition.Content as System.Windows.Controls.Grid)
+                .Children.OfType<RadioButton>()
+                .FirstOrDefault(rb => rb.IsChecked.Value == true)
+                .Name;
+            if (RoundHolesPositionButtonName == "radioButton_RoundHolesPositionYes")
+            {
+                label_RoundHolePosition.IsEnabled = true;
+                textBox_RoundHolePositionIncrement.IsEnabled = true;
+                label_RoundHolePositionMM.IsEnabled = true;
+            }
+            else if (RoundHolesPositionButtonName == "radioButton_RoundHolesPositionNo")
+            {
+                label_RoundHolePosition.IsEnabled = false;
+                textBox_RoundHolePositionIncrement.IsEnabled = false;
+                label_RoundHolePositionMM.IsEnabled = false;
+            }
+        }
         private void SaveSettings()
         {
             GloryHoleRefreshElevationsSettingsItem = new GloryHoleRefreshElevationsSettings();
@@ -60,8 +100,13 @@ namespace GloryHoleRefreshElevations
                 .Children.OfType<RadioButton>()
                 .FirstOrDefault(rb => rb.IsChecked.Value == true)
                 .Name;
-
             GloryHoleRefreshElevationsSettingsItem.RefreshElevationsOptionButtonName = RefreshElevationsOptionButtonName;
+
+            GloryHoleRefreshElevationsSettingsItem.RoundHolesPositionButtonName = RoundHolesPositionButtonName;
+
+            double.TryParse(textBox_RoundHolePositionIncrement.Text, out RoundHolePositionIncrement);
+            GloryHoleRefreshElevationsSettingsItem.RoundHolePositionIncrementValue = textBox_RoundHolePositionIncrement.Text;
+
             GloryHoleRefreshElevationsSettingsItem.SaveSettings();
         }
     }

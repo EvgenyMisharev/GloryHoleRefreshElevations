@@ -34,6 +34,9 @@ namespace GloryHoleRefreshElevations
             }
 
             string refreshElevationsOptionButtonName = gloryHoleRefreshElevationsWPF.RefreshElevationsOptionButtonName;
+            string roundHolesPositionButtonName = gloryHoleRefreshElevationsWPF.RoundHolesPositionButtonName;
+            double roundHolePositionIncrement = gloryHoleRefreshElevationsWPF.RoundHolePositionIncrement;
+
             List<FamilyInstance> intersectionPointFamilyInstanceList = null;
             List<FamilyInstance> intersectionPointWeandrevitList = null;
 
@@ -106,7 +109,8 @@ namespace GloryHoleRefreshElevations
                     {
                         if (intersectionPoint.get_Parameter(levelOffsetGuid) != null)
                         {
-                            intersectionPoint.get_Parameter(levelOffsetGuid).Set(intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsDouble() - 50 / 304.8);
+                            double elev = intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsDouble() - 50 / 304.8;
+                            intersectionPoint.get_Parameter(levelOffsetGuid).Set(elev);
                         }
                     }
                     else if (intersectionPoint.Symbol.FamilyName == "Отверстие_Плита_Прямоугольное"
@@ -117,7 +121,8 @@ namespace GloryHoleRefreshElevations
                         {
                             if (intersectionPoint.get_Parameter(levelOffsetGuid) != null)
                             {
-                                intersectionPoint.get_Parameter(levelOffsetGuid).Set(doc.GetElement(intersectionPoint.Host.Id).get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM).AsDouble());
+                                double elev = doc.GetElement(intersectionPoint.Host.Id).get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM).AsDouble();
+                                intersectionPoint.get_Parameter(levelOffsetGuid).Set(elev);
                             }
                         }
                         else
@@ -132,15 +137,35 @@ namespace GloryHoleRefreshElevations
                     {
                         if (intersectionPoint.get_Parameter(levelOffsetGuid) != null)
                         {
-                            intersectionPoint.get_Parameter(levelOffsetGuid).Set(intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble());
+                            double elev = intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble();
+                            if (roundHolesPositionButtonName == "radioButton_RoundHolesPositionYes")
+                            {
+                                elev = RoundToIncrement(elev, roundHolePositionIncrement);
+                                intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).Set(elev);
+                                intersectionPoint.get_Parameter(levelOffsetGuid).Set(elev);
+                            }
+                            else
+                            {
+                                intersectionPoint.get_Parameter(levelOffsetGuid).Set(elev);
+                            }
                         }
                     }
                 }
                 foreach (FamilyInstance intersectionPoint in intersectionPointWeandrevitList)
                 {
+                    double elev = intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble();
                     if (intersectionPoint.get_Parameter(levelOffsetGuid) != null)
                     {
-                        intersectionPoint.get_Parameter(levelOffsetGuid).Set(intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble());
+                        if (roundHolesPositionButtonName == "radioButton_RoundHolesPositionYes")
+                        {
+                            elev = RoundToIncrement(elev, roundHolePositionIncrement);
+                            intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).Set(elev);
+                            intersectionPoint.get_Parameter(levelOffsetGuid).Set(elev);
+                        }
+                        else
+                        {
+                            intersectionPoint.get_Parameter(levelOffsetGuid).Set(elev);
+                        }
                     }
                 }
                 t.Commit();
@@ -166,6 +191,17 @@ namespace GloryHoleRefreshElevations
             {
                 // Создание экземпляра класса
                 object instance = Activator.CreateInstance(type, new object[] { assemblyName, assemblyNameRus });
+            }
+        }
+        private double RoundToIncrement(double value, double increment)
+        {
+            if (increment == 0)
+            {
+                return Math.Round(value, 6);
+            }
+            else
+            {
+                return (Math.Round((value * 304.8) / increment) * increment) / 304.8;
             }
         }
     }
