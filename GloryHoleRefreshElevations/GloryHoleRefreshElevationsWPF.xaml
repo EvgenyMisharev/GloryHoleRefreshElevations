@@ -5,8 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:GloryHoleRefreshElevations"
              mc:Ignorable="d" 
-             Title="Обновить отметки" Height="250" Width="400" 
-             MinHeight="250" MinWidth="400" MaxHeight="250" MaxWidth="400"
+             Title="Обновить отметки" Height="260" Width="400" 
+             MinHeight="260" MinWidth="400" MaxHeight="260" MaxWidth="400"
              WindowStyle="SingleBorderWindow" ResizeMode="NoResize" Icon="Resources/citrus.ico" WindowStartupLocation="CenterScreen" KeyDown="GloryHoleRefreshElevationsWPF_KeyDown">
     <Grid>
         <GroupBox x:Name="groupBox_RefreshElevationsOption" Header="Выберите опцию:" Margin="10,10,10,50" VerticalAlignment="Top" BorderBrush="#FFABADB3" Height="60">
