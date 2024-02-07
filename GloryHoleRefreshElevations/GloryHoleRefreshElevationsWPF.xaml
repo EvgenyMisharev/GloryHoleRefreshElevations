@@ -20,7 +20,7 @@
             </Grid>
         </GroupBox>
 
-        <Label x:Name="label_RoundHolePosition" Content="Округлять положение отверстий до:" HorizontalAlignment="Left" Margin="10,140,0,0" VerticalAlignment="Top" Width="210" Height="26" VerticalContentAlignment="Center" IsEnabled="False"/>
+        <Label x:Name="label_RoundHolePosition" Content="Округлять отметки отверстий до:" HorizontalAlignment="Left" Margin="10,140,0,0" VerticalAlignment="Top" Width="210" Height="26" VerticalContentAlignment="Center" IsEnabled="False"/>
         <TextBox x:Name="textBox_RoundHolePositionIncrement" HorizontalAlignment="Left" Height="26" Margin="220,140,0,0" TextWrapping="Wrap" Text="5" VerticalAlignment="Top" Width="40" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" IsEnabled="False" SpellCheck.IsEnabled="True"/>
         <Label x:Name="label_RoundHolePositionMM" Content="мм" HorizontalAlignment="Left" Margin="260,140,0,0" VerticalAlignment="Top" Width="30" Height="26" VerticalContentAlignment="Center" IsEnabled="False"/>
 
