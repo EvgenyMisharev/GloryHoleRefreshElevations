@@ -201,7 +201,7 @@ namespace GloryHoleRefreshElevations
             }
             else
             {
-                return Math.Round(Math.Round(value * 304.8, 2) / increment) * increment / 304.8;
+                return Math.Round(Math.Round(value * 304.8, 3) / increment) * increment / 304.8;
             }
         }
     }

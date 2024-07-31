@@ -45,6 +45,8 @@ namespace GloryHoleRefreshElevations
                 {
                     textBox_RoundHolePositionIncrement.Text = "5";
                 }
+
+                checkBox_UpdaterOn.IsChecked = GloryHoleRefreshElevationsSettingsItem.UpdaterOn;
             }
         }
         private void btn_Ok_Click(object sender, RoutedEventArgs e)
@@ -75,7 +77,7 @@ namespace GloryHoleRefreshElevations
         }
         private void radioButton_RoundHolesPosition_Checked(object sender, RoutedEventArgs e)
         {
-            RoundHolesPositionButtonName = (this.groupBox_RoundHolesPosition.Content as System.Windows.Controls.Grid)
+            RoundHolesPositionButtonName = (this.groupBox_RoundHolesPosition.Content as Grid)
                 .Children.OfType<RadioButton>()
                 .FirstOrDefault(rb => rb.IsChecked.Value == true)
                 .Name;
@@ -106,6 +108,8 @@ namespace GloryHoleRefreshElevations
 
             double.TryParse(textBox_RoundHolePositionIncrement.Text, out RoundHolePositionIncrement);
             GloryHoleRefreshElevationsSettingsItem.RoundHolePositionIncrementValue = textBox_RoundHolePositionIncrement.Text;
+
+            GloryHoleRefreshElevationsSettingsItem.UpdaterOn = checkBox_UpdaterOn.IsChecked ?? false;
 
             GloryHoleRefreshElevationsSettingsItem.SaveSettings();
         }

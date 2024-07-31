@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <GloryHoleRefreshElevationsSettings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <RefreshElevationsOptionButtonName>rbt_SelectedItems</RefreshElevationsOptionButtonName>
-  <RoundHolesPositionButtonName>radioButton_RoundHolesPositionYes</RoundHolesPositionButtonName>
+  <RefreshElevationsOptionButtonName>rbt_AllProject</RefreshElevationsOptionButtonName>
+  <RoundHolesPositionButtonName>radioButton_RoundHolesPositionNo</RoundHolesPositionButtonName>
   <RoundHolePositionIncrementValue>5</RoundHolePositionIncrementValue>
+  <UpdaterOn>true</UpdaterOn>
 </GloryHoleRefreshElevationsSettings>

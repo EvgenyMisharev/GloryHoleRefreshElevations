@@ -8,6 +8,7 @@ namespace GloryHoleRefreshElevations
         public string RefreshElevationsOptionButtonName { get; set; }
         public string RoundHolesPositionButtonName { get; set; }
         public string RoundHolePositionIncrementValue { get; set; }
+        public bool UpdaterOn { get; set; }
 
         public static GloryHoleRefreshElevationsSettings GetSettings()
         {
