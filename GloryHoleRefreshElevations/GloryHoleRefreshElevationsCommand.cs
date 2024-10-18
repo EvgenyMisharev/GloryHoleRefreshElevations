@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace GloryHoleRefreshElevations
 {
@@ -16,9 +17,10 @@ namespace GloryHoleRefreshElevations
         {
             try
             {
-                GetPluginStartInfo();
+                _ = GetPluginStartInfo();
             }
             catch { }
+
             // Получение текущего документа
             Document doc = commandData.Application.ActiveUIDocument.Document;
             Selection sel = commandData.Application.ActiveUIDocument.Selection;
@@ -172,7 +174,18 @@ namespace GloryHoleRefreshElevations
             }
             return Result.Succeeded;
         }
-        private static void GetPluginStartInfo()
+        private double RoundToIncrement(double value, double increment)
+        {
+            if (increment == 0)
+            {
+                return Math.Round(value, 6);
+            }
+            else
+            {
+                return Math.Round(Math.Round(value * 304.8, 3) / increment) * increment / 304.8;
+            }
+        }
+        private static async Task GetPluginStartInfo()
         {
             // Получаем сборку, в которой выполняется текущий код
             Assembly thisAssembly = Assembly.GetExecutingAssembly();
@@ -185,23 +198,21 @@ namespace GloryHoleRefreshElevations
 
             Assembly assembly = Assembly.LoadFrom(dllPath);
             Type type = assembly.GetType("PluginInfoCollector.InfoCollector");
-            var constructor = type.GetConstructor(new Type[] { typeof(string), typeof(string) });
 
             if (type != null)
             {
                 // Создание экземпляра класса
-                object instance = Activator.CreateInstance(type, new object[] { assemblyName, assemblyNameRus });
-            }
-        }
-        private double RoundToIncrement(double value, double increment)
-        {
-            if (increment == 0)
-            {
-                return Math.Round(value, 6);
-            }
-            else
-            {
-                return Math.Round(Math.Round(value * 304.8, 3) / increment) * increment / 304.8;
+                object instance = Activator.CreateInstance(type);
+
+                // Получение метода CollectPluginUsageAsync
+                var method = type.GetMethod("CollectPluginUsageAsync");
+
+                if (method != null)
+                {
+                    // Вызов асинхронного метода через reflection
+                    Task task = (Task)method.Invoke(instance, new object[] { assemblyName, assemblyNameRus });
+                    await task;  // Ожидание завершения асинхронного метода
+                }
             }
         }
     }
