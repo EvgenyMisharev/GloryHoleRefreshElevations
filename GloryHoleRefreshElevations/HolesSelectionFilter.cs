@@ -1,36 +1,69 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI.Selection;
 using System;
+using System.Collections.Generic;
 
 namespace GloryHoleRefreshElevations
 {
     public class HolesSelectionFilter : ISelectionFilter
     {
+        private readonly Guid gh_FamilyCode = new Guid("40bbbf16-4b6a-45e8-9896-620bb448db96");
+
+        // Допустимые семейства
+        private readonly HashSet<string> validFamilies = new HashSet<string>
+        {
+            "Пересечение_Стена_Прямоугольное",
+            "Пересечение_Стена_Круглое",
+            "Пересечение_Плита_Прямоугольное",
+            "Пересечение_Плита_Круглое",
+            "Отверстие_Стена_Прямоугольное",
+            "Отверстие_Стена_Круглое",
+            "Отверстие_Плита_Прямоугольное",
+            "Отверстие_Плита_Круглое",
+            "Гильза_Стена",
+            "Гильза_Плита"
+        };
+
+        // Допустимые коды отверстий
+        private readonly HashSet<string> validCodes = new HashSet<string>
+        {
+            "111", "112", "113", "114", "115", "116",  // Отверстия в стенах
+            "121", "122", "123", "124",  // Отверстия в плитах
+            "221", "222", "223", "224"   // Оконные отверстия в плитах
+        };
+
         public bool AllowElement(Element elem)
         {
-            if (elem is FamilyInstance
-                && elem.Category.Id.IntegerValue.Equals((int)BuiltInCategory.OST_GenericModel)
-                && ((elem as FamilyInstance).Symbol.FamilyName == "Пересечение_Стена_Прямоугольное"
-                || (elem as FamilyInstance).Symbol.Family.Name == "Пересечение_Стена_Круглое"
-                || (elem as FamilyInstance).Symbol.Family.Name == "Пересечение_Плита_Прямоугольное"
-                || (elem as FamilyInstance).Symbol.Family.Name == "Пересечение_Плита_Круглое"
-                || (elem as FamilyInstance).Symbol.Family.Name == "Отверстие_Стена_Прямоугольное"
-                || (elem as FamilyInstance).Symbol.Family.Name == "Отверстие_Стена_Круглое"
-                || (elem as FamilyInstance).Symbol.Family.Name == "Отверстие_Плита_Прямоугольное"
-                || (elem as FamilyInstance).Symbol.Family.Name == "Отверстие_Плита_Круглое"
-                || (elem as FamilyInstance).Symbol.Family.Name == "Гильза_Стена"
-                || (elem as FamilyInstance).Symbol.Family.Name == "Гильза_Плита"))
+            if (elem is FamilyInstance familyInstance)
+            {
+                string familyName = familyInstance.Symbol.FamilyName;
+                string familyCode = familyInstance.Symbol.get_Parameter(gh_FamilyCode)?.AsString();
 
-            {
-                return true;
+                // 1. Если семейство есть в списке допустимых — сразу принимаем
+                if (validFamilies.Contains(familyName))
+                {
+                    return true;
+                }
+
+                // 2. Если у элемента есть допустимый код — принимаем
+                if (!string.IsNullOrEmpty(familyCode) && validCodes.Contains(familyCode))
+                {
+                    return true;
+                }
             }
-            else if (elem is FamilyInstance
-                && elem.Category.Id.IntegerValue.Equals((int)BuiltInCategory.OST_Windows)
-                && ((elem as FamilyInstance).Symbol.FamilyName == "231_Отверстие прямоугольное (Окно_Стена)"
-                || (elem as FamilyInstance).Symbol.Family.Name == "231_Отверстие круглое с гильзой в стене (Окно_Стена)"))
+
+            // Проверяем оконные отверстия (категория OST_Windows)
+            if (elem is FamilyInstance windowInstance && elem.Category.Id.IntegerValue.Equals((int)BuiltInCategory.OST_Windows))
             {
-                return true;
+                string familyName = windowInstance.Symbol.FamilyName;
+
+                if (familyName == "231_Отверстие прямоугольное (Окно_Стена)" ||
+                    familyName == "231_Отверстие круглое с гильзой в стене (Окно_Стена)")
+                {
+                    return true;
+                }
             }
+
             return false;
         }
 
