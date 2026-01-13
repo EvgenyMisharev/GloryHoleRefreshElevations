@@ -3,7 +3,7 @@
   <RefreshElevationsOptionButtonName>rbt_AllProject</RefreshElevationsOptionButtonName>
   <RoundHolesPositionButtonName>radioButton_RoundHolesPositionNo</RoundHolesPositionButtonName>
   <RoundHolePositionIncrementValue>10</RoundHolePositionIncrementValue>
-  <RoundHolesLocationButtonName>radioButton_RoundHolesLocationNo</RoundHolesLocationButtonName>
-  <RoundHoleLocationIncrementValue>10</RoundHoleLocationIncrementValue>
+  <RoundHolesLocationButtonName>radioButton_RoundHolesLocationYes</RoundHolesLocationButtonName>
+  <RoundHoleLocationIncrementValue>50</RoundHoleLocationIncrementValue>
   <UpdaterOn>true</UpdaterOn>
 </GloryHoleRefreshElevationsSettings>

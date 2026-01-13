@@ -22,55 +22,50 @@ namespace GloryHoleRefreshElevations
 
         // Список допустимых значений параметра типа
         HashSet<string> validCodes = new HashSet<string>
-            {
-                "111", "113", "115", // Пересечение_Стена_Прямоугольное
-                "112", "114", "116", // Пересечение_Стена_Круглое
-                "121", "123",        // Пересечение_Плита_Прямоугольное
-                "122", "124",        // Пересечение_Плита_Круглое
-                "126",              // Отверстие_Стена_Круглое
-                "221", "223",       // Отверстие_Плита_Прямоугольное
-                "222", "224"        // Отверстие_Плита_Круглое
-            };
+        {
+            "111", "113", "115", // Пересечение_Стена_Прямоугольное
+            "112", "114", "116", // Пересечение_Стена_Круглое
+            "121", "123",        // Пересечение_Плита_Прямоугольное
+            "122", "124",        // Пересечение_Плита_Круглое
+            "126",               // Отверстие_Стена_Круглое
+            "221", "223",        // Отверстие_Плита_Прямоугольное
+            "222", "224"         // Отверстие_Плита_Круглое
+        };
 
         // Список допустимых семейств
         HashSet<string> validFamilies = new HashSet<string>
-            {
-                "Пересечение_Стена_Прямоугольное",
-                "Пересечение_Стена_Круглое",
-                "Пересечение_Плита_Прямоугольное",
-                "Пересечение_Плита_Круглое",
-                "Отверстие_Стена_Прямоугольное",
-                "Отверстие_Стена_Круглое",
-                "Отверстие_Плита_Прямоугольное",
-                "Отверстие_Плита_Круглое",
-                "Гильза_Стена",
-                "Гильза_Плита"
-            };
+        {
+            "Пересечение_Стена_Прямоугольное",
+            "Пересечение_Стена_Круглое",
+            "Пересечение_Плита_Прямоугольное",
+            "Пересечение_Плита_Круглое",
+            "Отверстие_Стена_Прямоугольное",
+            "Отверстие_Стена_Круглое",
+            "Отверстие_Плита_Прямоугольное",
+            "Отверстие_Плита_Круглое",
+            "Гильза_Стена",
+            "Гильза_Плита"
+        };
+
+        private const double MM_PER_FOOT = 304.8;
+        private const double PERP_TOL = 1e-3;
+        private const double PREFER_HOST_MAX_DISTANCE_MM = 2000; 
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            try
-            {
-                _ = GetPluginStartInfo();
-            }
-            catch { }
+            try { _ = GetPluginStartInfo(); } catch { }
 
-            // Получение текущего документа
             Document doc = commandData.Application.ActiveUIDocument.Document;
             Selection sel = commandData.Application.ActiveUIDocument.Selection;
 
-            List<Grid> grids = new FilteredElementCollector(doc)
-                .OfCategory(BuiltInCategory.OST_Grids)
-                .OfClass(typeof(Grid))
-                .Cast<Grid>()
-                .ToList();
+            // Оси: хост + все загруженные связи (в координатах хоста)
+            List<GridLine2D> gridLines = CollectAllGridLinesInHostXY(doc);
+            double preferHostMaxDistFt = MmToFt(PREFER_HOST_MAX_DISTANCE_MM);
 
             GloryHoleRefreshElevationsWPF gloryHoleRefreshElevationsWPF = new GloryHoleRefreshElevationsWPF();
             gloryHoleRefreshElevationsWPF.ShowDialog();
             if (gloryHoleRefreshElevationsWPF.DialogResult != true)
-            {
                 return Result.Cancelled;
-            }
 
             string refreshElevationsOptionButtonName = gloryHoleRefreshElevationsWPF.RefreshElevationsOptionButtonName;
             string roundHolesPositionButtonName = gloryHoleRefreshElevationsWPF.RoundHolesPositionButtonName;
@@ -94,15 +89,12 @@ namespace GloryHoleRefreshElevations
                         string familyName = ip.Symbol.Family.Name;
                         string familyCode = ip.Symbol.get_Parameter(gh_FamilyCode)?.AsString();
 
-                        // 1. Если семейство есть в списке — сразу берем
                         if (validFamilies.Contains(familyName))
                             return true;
 
-                        // 2. Если параметр задан и его значение допустимо — берем
                         if (!string.IsNullOrEmpty(familyCode) && validCodes.Contains(familyCode))
                             return true;
 
-                        // Если не подошло ни одно из условий — отбрасываем
                         return false;
                     })
                     .ToList();
@@ -112,15 +104,16 @@ namespace GloryHoleRefreshElevations
                     .OfClass(typeof(FamilyInstance))
                     .WhereElementIsNotElementType()
                     .Cast<FamilyInstance>()
-                    .Where(ip => ip.Symbol.Family.Name == "231_Отверстие прямоугольное (Окно_Стена)"
-                    || ip.Symbol.Family.Name == "231_Отверстие круглое с гильзой в стене (Окно_Стена)")
+                    .Where(ip =>
+                        ip.Symbol.Family.Name == "231_Отверстие прямоугольное (Окно_Стена)" ||
+                        ip.Symbol.Family.Name == "231_Отверстие круглое с гильзой в стене (Окно_Стена)")
                     .ToList();
-
             }
             else
             {
                 HolesSelectionFilter holesSelectionFilter = new HolesSelectionFilter();
                 IList<Reference> selHoles = null;
+
                 try
                 {
                     selHoles = sel.PickObjects(ObjectType.Element, holesSelectionFilter, "Выберите отверстия!");
@@ -132,36 +125,36 @@ namespace GloryHoleRefreshElevations
 
                 intersectionPointFamilyInstanceList = new List<FamilyInstance>();
                 intersectionPointWeandrevitList = new List<FamilyInstance>();
+
                 foreach (Reference roomRef in selHoles)
                 {
-                    if ((doc.GetElement(roomRef) as FamilyInstance) != null && (doc.GetElement(roomRef) as FamilyInstance).Category.Id.IntegerValue.Equals((int)BuiltInCategory.OST_GenericModel))
-                    {
-                        intersectionPointFamilyInstanceList.Add(doc.GetElement(roomRef) as FamilyInstance);
-                    }
-                    else if ((doc.GetElement(roomRef) as FamilyInstance) != null && (doc.GetElement(roomRef) as FamilyInstance).Category.Id.IntegerValue.Equals((int)BuiltInCategory.OST_Windows))
-                    {
-                        intersectionPointWeandrevitList.Add(doc.GetElement(roomRef) as FamilyInstance);
-                    }
+                    var fi = doc.GetElement(roomRef) as FamilyInstance;
+                    if (fi == null) continue;
+
+                    if (fi.Category.Id.IntegerValue == (int)BuiltInCategory.OST_GenericModel)
+                        intersectionPointFamilyInstanceList.Add(fi);
+                    else if (fi.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Windows)
+                        intersectionPointWeandrevitList.Add(fi);
                 }
             }
 
             using (Transaction t = new Transaction(doc))
             {
                 t.Start("Обновление отметок");
+
                 foreach (FamilyInstance intersectionPoint in intersectionPointFamilyInstanceList)
                 {
-                    // Получаем значение параметра gh_FamilyCode
                     string familyCode = intersectionPoint.Symbol.get_Parameter(gh_FamilyCode)?.AsString();
 
-                    // Устанавливаем отметку уровня (Elevation)
-                    intersectionPoint.get_Parameter(heightOfBaseLevelGuid).Set((doc.GetElement(intersectionPoint.LevelId) as Level).Elevation);
+                    // Elevation базового уровня
+                    intersectionPoint.get_Parameter(heightOfBaseLevelGuid)
+                        .Set((doc.GetElement(intersectionPoint.LevelId) as Level).Elevation);
 
-                    // Если у элемента есть код, обрабатываем его по группам
                     if (!string.IsNullOrEmpty(familyCode))
                     {
+                        // 111..116 — пересечения в стенах
                         if (familyCode == "111" || familyCode == "112" || familyCode == "113" || familyCode == "114" || familyCode == "115" || familyCode == "116")
                         {
-                            // Обычные отверстия в стенах (пересечения)
                             if (intersectionPoint.get_Parameter(levelOffsetGuid) != null)
                             {
                                 double elev = intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble();
@@ -172,54 +165,45 @@ namespace GloryHoleRefreshElevations
                                 }
                                 intersectionPoint.get_Parameter(levelOffsetGuid).Set(elev);
                             }
+
                             if (roundHolesLocationButtonName == "radioButton_RoundHolesLocationYes")
                             {
                                 XYZ originIntersection = (intersectionPoint.Location as LocationPoint)?.Point;
                                 if (originIntersection != null)
                                 {
-                                    if (familyCode == "111" || familyCode == "113" || familyCode == "115")
-                                    {
-                                        RoundHolesPositionInWalls(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, true);
-                                    }
-                                    else if (familyCode == "112" || familyCode == "114" || familyCode == "116")
-                                    {
-                                        RoundHolesPositionInWalls(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, false);
-                                    }
+                                    bool alignByEdges = (familyCode == "111" || familyCode == "113" || familyCode == "115");
+                                    RoundHolesPositionInWalls(doc, gridLines, preferHostMaxDistFt, roundHoleLocationIncrement, originIntersection, intersectionPoint, alignByEdges);
                                 }
                             }
                         }
+                        // 121..124 — пересечения в плитах
                         else if (familyCode == "121" || familyCode == "122" || familyCode == "123" || familyCode == "124")
                         {
-                            // Отверстия в плитах (пересечения)
                             if (intersectionPoint.get_Parameter(levelOffsetGuid) != null)
                             {
                                 double elev = intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsDouble() - 50 / 304.8;
                                 intersectionPoint.get_Parameter(levelOffsetGuid).Set(elev);
                             }
+
                             if (roundHolesLocationButtonName == "radioButton_RoundHolesLocationYes")
                             {
                                 XYZ originIntersection = (intersectionPoint.Location as LocationPoint)?.Point;
                                 if (originIntersection != null)
                                 {
-                                    if (familyCode == "121" || familyCode == "123")
-                                    {
-                                        RoundHolesPositionInSlabs(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, true);
-                                    }
-                                    else if (familyCode == "122" || familyCode == "124")
-                                    {
-                                        RoundHolesPositionInSlabs(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, false);
-                                    }
+                                    bool alignByEdges = (familyCode == "121" || familyCode == "123");
+                                    RoundHolesPositionInSlabs(doc, gridLines, preferHostMaxDistFt, roundHoleLocationIncrement, originIntersection, intersectionPoint, alignByEdges);
                                 }
                             }
                         }
+                        // 221..224 — отверстия в плитах с Host
                         else if (familyCode == "221" || familyCode == "222" || familyCode == "223" || familyCode == "224")
                         {
-                            // Отверстия в плитах, связанные с Host (оконные отверстия)
                             if (intersectionPoint.Host != null)
                             {
                                 if (intersectionPoint.get_Parameter(levelOffsetGuid) != null)
                                 {
-                                    double elev = doc.GetElement(intersectionPoint.Host.Id).get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM).AsDouble();
+                                    double elev = doc.GetElement(intersectionPoint.Host.Id)
+                                        .get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM).AsDouble();
                                     intersectionPoint.get_Parameter(levelOffsetGuid).Set(elev);
                                 }
 
@@ -228,29 +212,21 @@ namespace GloryHoleRefreshElevations
                                     XYZ originIntersection = (intersectionPoint.Location as LocationPoint)?.Point;
                                     if (originIntersection != null)
                                     {
-                                        if (familyCode == "221" || familyCode == "223")
-                                        {
-                                            RoundHolesPositionInSlabs(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, true);
-                                        }
-                                        else if (familyCode == "222" || familyCode == "224")
-                                        {
-                                            RoundHolesPositionInSlabs(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, false);
-                                        }
+                                        bool alignByEdges = (familyCode == "221" || familyCode == "223");
+                                        RoundHolesPositionInSlabs(doc, gridLines, preferHostMaxDistFt, roundHoleLocationIncrement, originIntersection, intersectionPoint, alignByEdges);
                                     }
                                 }
                             }
                             else
                             {
                                 if (intersectionPoint.get_Parameter(levelOffsetGuid) != null)
-                                {
                                     intersectionPoint.get_Parameter(levelOffsetGuid).Set(0);
-                                }
                             }
                         }
                     }
                     else
                     {
-                        // Если кода нет, используем старую проверку по FamilyName
+                        // fallback по имени семейства (как было)
                         if (intersectionPoint.Symbol.FamilyName == "Пересечение_Плита_Прямоугольное"
                             || intersectionPoint.Symbol.FamilyName == "Пересечение_Плита_Круглое")
                         {
@@ -259,19 +235,14 @@ namespace GloryHoleRefreshElevations
                                 double elev = intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_FREE_HOST_OFFSET_PARAM).AsDouble() - 50 / 304.8;
                                 intersectionPoint.get_Parameter(levelOffsetGuid).Set(elev);
                             }
+
                             if (roundHolesLocationButtonName == "radioButton_RoundHolesLocationYes")
                             {
                                 XYZ originIntersection = (intersectionPoint.Location as LocationPoint)?.Point;
                                 if (originIntersection != null)
                                 {
-                                    if (intersectionPoint.Symbol.FamilyName == "Пересечение_Плита_Прямоугольное")
-                                    {
-                                        RoundHolesPositionInSlabs(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, true);
-                                    }
-                                    else if (intersectionPoint.Symbol.FamilyName == "Пересечение_Плита_Круглое")
-                                    {
-                                        RoundHolesPositionInSlabs(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, false);
-                                    }
+                                    bool alignByEdges = intersectionPoint.Symbol.FamilyName == "Пересечение_Плита_Прямоугольное";
+                                    RoundHolesPositionInSlabs(doc, gridLines, preferHostMaxDistFt, roundHoleLocationIncrement, originIntersection, intersectionPoint, alignByEdges);
                                 }
                             }
                         }
@@ -283,55 +254,42 @@ namespace GloryHoleRefreshElevations
                             {
                                 if (intersectionPoint.get_Parameter(levelOffsetGuid) != null)
                                 {
-                                    double elev = doc.GetElement(intersectionPoint.Host.Id).get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM).AsDouble();
+                                    double elev = doc.GetElement(intersectionPoint.Host.Id)
+                                        .get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM).AsDouble();
                                     intersectionPoint.get_Parameter(levelOffsetGuid).Set(elev);
                                 }
+
                                 if (roundHolesLocationButtonName == "radioButton_RoundHolesLocationYes")
                                 {
                                     XYZ originIntersection = (intersectionPoint.Location as LocationPoint)?.Point;
                                     if (originIntersection != null)
                                     {
-                                        if (intersectionPoint.Symbol.FamilyName == "Отверстие_Плита_Прямоугольное")
-                                        {
-                                            RoundHolesPositionInSlabs(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, true);
-                                        }
-                                        else if (intersectionPoint.Symbol.FamilyName == "Отверстие_Плита_Круглое"
-                                            || intersectionPoint.Symbol.FamilyName == "Гильза_Плита")
-                                        {
-                                            RoundHolesPositionInSlabs(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, false);
-                                        }
+                                        bool alignByEdges = intersectionPoint.Symbol.FamilyName == "Отверстие_Плита_Прямоугольное";
+                                        RoundHolesPositionInSlabs(doc, gridLines, preferHostMaxDistFt, roundHoleLocationIncrement, originIntersection, intersectionPoint, alignByEdges);
                                     }
                                 }
                             }
                             else
                             {
                                 if (intersectionPoint.get_Parameter(levelOffsetGuid) != null)
-                                {
                                     intersectionPoint.get_Parameter(levelOffsetGuid).Set(0);
-                                }
+
                                 if (roundHolesLocationButtonName == "radioButton_RoundHolesLocationYes")
                                 {
                                     XYZ originIntersection = (intersectionPoint.Location as LocationPoint)?.Point;
                                     if (originIntersection != null)
                                     {
-                                        if (intersectionPoint.Symbol.FamilyName == "Пересечение_Стена_Прямоугольное"
-                                            || intersectionPoint.Symbol.FamilyName == "Отверстие_Стена_Прямоугольное")
-                                        {
-                                            RoundHolesPositionInWalls(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, true);
-                                        }
-                                        else if (intersectionPoint.Symbol.FamilyName == "Пересечение_Стена_Круглое"
-                                            || intersectionPoint.Symbol.FamilyName == "Отверстие_Стена_Круглое"
-                                            || intersectionPoint.Symbol.FamilyName == "Гильза_Стена")
-                                        {
-                                            RoundHolesPositionInWalls(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, false);
-                                        }
+                                        bool alignByEdges =
+                                            intersectionPoint.Symbol.FamilyName == "Пересечение_Стена_Прямоугольное" ||
+                                            intersectionPoint.Symbol.FamilyName == "Отверстие_Стена_Прямоугольное";
+
+                                        RoundHolesPositionInWalls(doc, gridLines, preferHostMaxDistFt, roundHoleLocationIncrement, originIntersection, intersectionPoint, alignByEdges);
                                     }
                                 }
                             }
                         }
                         else
                         {
-                            // Для остальных элементов применяем обработку по INSTANCE_ELEVATION_PARAM
                             if (intersectionPoint.get_Parameter(levelOffsetGuid) != null)
                             {
                                 double elev = intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble();
@@ -342,28 +300,24 @@ namespace GloryHoleRefreshElevations
                                 }
                                 intersectionPoint.get_Parameter(levelOffsetGuid).Set(elev);
                             }
+
                             if (roundHolesLocationButtonName == "radioButton_RoundHolesLocationYes")
                             {
                                 XYZ originIntersection = (intersectionPoint.Location as LocationPoint)?.Point;
                                 if (originIntersection != null)
                                 {
-                                    if (intersectionPoint.Symbol.FamilyName == "Пересечение_Стена_Прямоугольное"
-                                        || intersectionPoint.Symbol.FamilyName == "Отверстие_Стена_Прямоугольное")
-                                    {
-                                        RoundHolesPositionInWalls(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, true);
-                                    }
-                                    else if (intersectionPoint.Symbol.FamilyName == "Пересечение_Стена_Круглое"
-                                        || intersectionPoint.Symbol.FamilyName == "Отверстие_Стена_Круглое"
-                                        || intersectionPoint.Symbol.FamilyName == "Гильза_Стена")
-                                    {
-                                        RoundHolesPositionInWalls(doc, grids, roundHoleLocationIncrement, originIntersection, intersectionPoint, false);
-                                    }
+                                    bool alignByEdges =
+                                        intersectionPoint.Symbol.FamilyName == "Пересечение_Стена_Прямоугольное" ||
+                                        intersectionPoint.Symbol.FamilyName == "Отверстие_Стена_Прямоугольное";
+
+                                    RoundHolesPositionInWalls(doc, gridLines, preferHostMaxDistFt, roundHoleLocationIncrement, originIntersection, intersectionPoint, alignByEdges);
                                 }
                             }
                         }
                     }
                 }
 
+                // weandrevit
                 foreach (FamilyInstance intersectionPoint in intersectionPointWeandrevitList)
                 {
                     double elev = intersectionPoint.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).AsDouble();
@@ -381,24 +335,178 @@ namespace GloryHoleRefreshElevations
                         }
                     }
                 }
+
                 t.Commit();
             }
+
             return Result.Succeeded;
         }
+
         private double RoundToIncrement(double value, double increment)
         {
             if (increment == 0)
-            {
                 return Math.Round(value, 6);
-            }
-            else
+
+            return Math.Round(Math.Round(value * 304.8, 2) / increment) * increment / 304.8;
+        }
+
+        private static double MmToFt(double mm) => mm / MM_PER_FOOT;
+
+        // ====== Grid helpers (Host + Links) ======
+
+        private sealed class GridLine2D
+        {
+            public Line Line2D { get; }
+            public bool IsHost { get; }
+            public ElementId SourceGridId { get; }
+
+            public GridLine2D(Line line2D, bool isHost, ElementId sourceGridId)
             {
-                return Math.Round(Math.Round(value * 304.8, 2) / increment) * increment / 304.8;
+                Line2D = line2D;
+                IsHost = isHost;
+                SourceGridId = sourceGridId;
             }
         }
+
+        private static XYZ ToXY(XYZ p) => new XYZ(p.X, p.Y, 0);
+
+        private static XYZ SafeNormalize2D(XYZ v, XYZ fallback)
+        {
+            var v2 = new XYZ(v.X, v.Y, 0);
+            return v2.GetLength() < 1e-9 ? fallback : v2.Normalize();
+        }
+
+        private static XYZ ProjectPointToUnboundLine2D(XYZ p2d, XYZ lineOrigin2d, XYZ dir2dUnit)
+        {
+            double t = (p2d - lineOrigin2d).DotProduct(dir2dUnit);
+            return lineOrigin2d + dir2dUnit * t;
+        }
+
+        private static double DistancePointToUnboundLine2D(XYZ p2d, XYZ lineOrigin2d, XYZ dir2dUnit)
+        {
+            var proj = ProjectPointToUnboundLine2D(p2d, lineOrigin2d, dir2dUnit);
+            return (proj - p2d).GetLength();
+        }
+
+        private static GridLine2D ToUnbound2D(Line boundLine, bool isHost, ElementId gridId)
+        {
+            var p0 = ToXY(boundLine.GetEndPoint(0));
+            var p1 = ToXY(boundLine.GetEndPoint(1));
+            var dir = (p1 - p0);
+            if (dir.GetLength() < 1e-9) return null;
+
+            var unbound = Line.CreateUnbound(p0, dir.Normalize());
+            return new GridLine2D(unbound, isHost, gridId);
+        }
+
+        private static List<GridLine2D> CollectAllGridLinesInHostXY(Document hostDoc)
+        {
+            var res = new List<GridLine2D>();
+
+            // Host grids
+            var hostGrids = new FilteredElementCollector(hostDoc)
+                .OfCategory(BuiltInCategory.OST_Grids)
+                .OfClass(typeof(Grid))
+                .Cast<Grid>();
+
+            foreach (var g in hostGrids)
+            {
+                if (g.Curve is not Line l) continue;
+                var gl = ToUnbound2D(l, isHost: true, g.Id);
+                if (gl != null) res.Add(gl);
+            }
+
+            // Link grids
+            var links = new FilteredElementCollector(hostDoc)
+                .OfClass(typeof(RevitLinkInstance))
+                .Cast<RevitLinkInstance>();
+
+            foreach (var link in links)
+            {
+                var linkDoc = link.GetLinkDocument();
+                if (linkDoc == null) continue;
+
+                Transform tr = link.GetTotalTransform();
+
+                var linkGrids = new FilteredElementCollector(linkDoc)
+                    .OfCategory(BuiltInCategory.OST_Grids)
+                    .OfClass(typeof(Grid))
+                    .Cast<Grid>();
+
+                foreach (var g in linkGrids)
+                {
+                    if (g.Curve is not Line l) continue;
+
+                    XYZ p0 = tr.OfPoint(l.GetEndPoint(0));
+                    XYZ p1 = tr.OfPoint(l.GetEndPoint(1));
+
+                    var p0xy = ToXY(p0);
+                    var p1xy = ToXY(p1);
+                    var dir = (p1xy - p0xy);
+                    if (dir.GetLength() < 1e-9) continue;
+
+                    var unbound2d = Line.CreateUnbound(p0xy, dir.Normalize());
+                    res.Add(new GridLine2D(unbound2d, isHost: false, g.Id));
+                }
+            }
+
+            return res;
+        }
+
+        private static GridLine2D GetClosestPerpendicularGridLinePreferHost(
+            List<GridLine2D> allLines,
+            XYZ pointWorld,
+            XYZ orientationWorld,
+            double preferHostMaxDistanceFt)
+        {
+            if (allLines == null || allLines.Count == 0) return null;
+
+            XYZ p = ToXY(pointWorld);
+            XYZ o = SafeNormalize2D(orientationWorld, XYZ.BasisX);
+
+            GridLine2D bestHost = null;
+            double bestHostDist = double.MaxValue;
+
+            GridLine2D bestAny = null;
+            double bestAnyDist = double.MaxValue;
+
+            foreach (var gl in allLines)
+            {
+                if (gl?.Line2D == null) continue;
+
+                XYZ dir = SafeNormalize2D(gl.Line2D.Direction, XYZ.BasisY);
+
+                double dot = Math.Abs(dir.DotProduct(o));
+                if (dot > PERP_TOL) continue;
+
+                XYZ lineOrigin = ToXY(gl.Line2D.Origin);
+                double dist = DistancePointToUnboundLine2D(p, lineOrigin, dir);
+
+                if (dist < bestAnyDist)
+                {
+                    bestAnyDist = dist;
+                    bestAny = gl;
+                }
+
+                if (gl.IsHost && dist < bestHostDist)
+                {
+                    bestHostDist = dist;
+                    bestHost = gl;
+                }
+            }
+
+            if (bestHost != null && bestHostDist <= preferHostMaxDistanceFt)
+                return bestHost;
+
+            return bestAny ?? bestHost;
+        }
+
+        // ====== Alignment ======
+
         private void RoundHolesPositionInWalls(
             Document doc,
-            List<Grid> grids,
+            List<GridLine2D> gridLines,
+            double preferHostMaxDistFt,
             double roundHolePosition,
             XYZ originIntersectionCurve,
             FamilyInstance intersectionPoint,
@@ -406,77 +514,60 @@ namespace GloryHoleRefreshElevations
         {
             doc.Regenerate();
 
-            // 1. Находим ближайшую ось, перпендикулярную HandOrientation
-            Grid closestGrid = GetClosestPerpendicularGrid(grids, originIntersectionCurve, intersectionPoint.HandOrientation);
-            if (closestGrid == null)
+            var closest = GetClosestPerpendicularGridLinePreferHost(
+                gridLines, originIntersectionCurve, intersectionPoint.HandOrientation, preferHostMaxDistFt);
+
+            if (closest?.Line2D == null)
                 return;
 
-            Line gridLine = closestGrid.Curve as Line;
-            if (gridLine == null)
-                return;
+            XYZ originXY = ToXY(originIntersectionCurve);
+            XYZ handXY = SafeNormalize2D(intersectionPoint.HandOrientation, XYZ.BasisX);
 
-            // 2. Определяем центр отверстия в плоскости XY и направление HandOrientation (в плоскости XY)
-            XYZ originXY = new XYZ(originIntersectionCurve.X, originIntersectionCurve.Y, 0);
-            XYZ handOrientationXY = new XYZ(intersectionPoint.HandOrientation.X, intersectionPoint.HandOrientation.Y, 0).Normalize();
+            XYZ lineOrigin = ToXY(closest.Line2D.Origin);
+            XYZ lineDir = SafeNormalize2D(closest.Line2D.Direction, XYZ.BasisY);
 
-            // 3. Приводим линию оси к плоскости XY
-            XYZ gridStart2D = new XYZ(gridLine.GetEndPoint(0).X, gridLine.GetEndPoint(0).Y, 0);
-            XYZ gridEnd2D = new XYZ(gridLine.GetEndPoint(1).X, gridLine.GetEndPoint(1).Y, 0);
-            XYZ d = (gridEnd2D - gridStart2D).Normalize();
-
-            // Функция проекции точки P на бесконечную прямую
-            Func<XYZ, XYZ> ProjectPoint2D = (XYZ P) =>
-            {
-                double t = (P - gridStart2D).DotProduct(d);
-                return gridStart2D + d * t;
-            };
-
-            XYZ projXY;
-            double currentDistance;
+            XYZ pointToProject = originXY;
 
             if (alignByEdges)
             {
-                // 4. Получаем ширину отверстия
-                double width = intersectionPoint.get_Parameter(intersectionPointWidthGuid).AsDouble();
+                double width = intersectionPoint.get_Parameter(intersectionPointWidthGuid)?.AsDouble() ?? 0;
+                if (width > 1e-9)
+                {
+                    XYZ leftEdgeXY = originXY - handXY * (width / 2);
+                    XYZ rightEdgeXY = originXY + handXY * (width / 2);
 
-                // 5. Вычисляем координаты левой и правой грани
-                XYZ leftEdgeXY = originXY - handOrientationXY * (width / 2);
-                XYZ rightEdgeXY = originXY + handOrientationXY * (width / 2);
+                    XYZ leftProj = ProjectPointToUnboundLine2D(leftEdgeXY, lineOrigin, lineDir);
+                    XYZ rightProj = ProjectPointToUnboundLine2D(rightEdgeXY, lineOrigin, lineDir);
 
-                // 6. Проецируем грани на ось
-                XYZ leftProjXY = ProjectPoint2D(leftEdgeXY);
-                XYZ rightProjXY = ProjectPoint2D(rightEdgeXY);
+                    double leftDist = (leftProj - leftEdgeXY).GetLength();
+                    double rightDist = (rightProj - rightEdgeXY).GetLength();
 
-                // 7. Вычисляем расстояния
-                double leftDistance = (leftProjXY - leftEdgeXY).GetLength();
-                double rightDistance = (rightProjXY - rightEdgeXY).GetLength();
-
-                // 8. Определяем, какую грань использовать
-                bool useLeft = leftDistance < rightDistance;
-                projXY = useLeft ? leftProjXY : rightProjXY;
-                currentDistance = useLeft ? leftDistance : rightDistance;
-            }
-            else
-            {
-                // Проекция от центра отверстия (originXY)
-                projXY = ProjectPoint2D(originXY);
-                currentDistance = (projXY - originXY).GetLength();
+                    pointToProject = leftDist <= rightDist ? leftEdgeXY : rightEdgeXY;
+                }
             }
 
-            // 9. Округляем текущее расстояние
+            XYZ proj = ProjectPointToUnboundLine2D(pointToProject, lineOrigin, lineDir);
+            double currentDistance = (proj - pointToProject).GetLength();
+
             double targetDistance = RoundToIncrement(currentDistance, roundHolePosition);
             double delta = targetDistance - currentDistance;
 
-            // 10. Определяем направление смещения
-            XYZ moveDirectionXY = (projXY - originXY).Normalize();
-            XYZ finalMoveXY = moveDirectionXY * delta;
+            if (Math.Abs(delta) < 1e-9)
+                return;
 
-            // 11. Перемещаем элемент
+            XYZ moveDir = proj - pointToProject;
+            if (moveDir.GetLength() < 1e-9)
+                return;
+
+            XYZ finalMoveXY = moveDir.Normalize() * delta;
+
             ElementTransformUtils.MoveElement(doc, intersectionPoint.Id, -finalMoveXY);
         }
+
         private void RoundHolesPositionInSlabs(
             Document doc,
-            List<Grid> grids,
+            List<GridLine2D> gridLines,
+            double preferHostMaxDistFt,
             double roundHolePosition,
             XYZ originIntersectionCurve,
             FamilyInstance intersectionPoint,
@@ -484,119 +575,97 @@ namespace GloryHoleRefreshElevations
         {
             doc.Regenerate();
 
-            XYZ originXY = new XYZ(originIntersectionCurve.X, originIntersectionCurve.Y, 0);
+            XYZ originXY = ToXY(originIntersectionCurve);
 
-            XYZ facingOrientationXY = new XYZ(
-                intersectionPoint.FacingOrientation.X,
-                intersectionPoint.FacingOrientation.Y,
-                0).Normalize();
+            XYZ facingXY = SafeNormalize2D(intersectionPoint.FacingOrientation, XYZ.BasisY);
+            XYZ handXY = SafeNormalize2D(intersectionPoint.HandOrientation, XYZ.BasisX);
 
-            XYZ handOrientationXY = new XYZ(
-                intersectionPoint.HandOrientation.X,
-                intersectionPoint.HandOrientation.Y,
-                0).Normalize();
+            var gridHand = GetClosestPerpendicularGridLinePreferHost(
+                gridLines, originIntersectionCurve, intersectionPoint.HandOrientation, preferHostMaxDistFt);
 
-            // Ищем ближайшие оси
-            Grid closestGridHand = GetClosestPerpendicularGrid(grids, originIntersectionCurve, intersectionPoint.HandOrientation);
-            Grid closestGridFacing = GetClosestPerpendicularGrid(grids, originIntersectionCurve, intersectionPoint.FacingOrientation);
+            var gridFacing = GetClosestPerpendicularGridLinePreferHost(
+                gridLines, originIntersectionCurve, intersectionPoint.FacingOrientation, preferHostMaxDistFt);
 
-            Line gridLineHand = closestGridHand?.Curve as Line;
-            Line gridLineFacing = closestGridFacing?.Curve as Line;
-
-            if (gridLineHand == null && gridLineFacing == null)
-                return; // Ни одной оси не найдено
+            if (gridHand?.Line2D == null && gridFacing?.Line2D == null)
+                return;
 
             XYZ finalMoveXY = XYZ.Zero;
 
-            // Функция проекции точки на ось
-            XYZ ProjectPoint(XYZ P, XYZ lineStart, XYZ dir) =>
-                lineStart + dir * (P - lineStart).DotProduct(dir);
-
-            if (gridLineHand != null)
+            void AccumulateMove(GridLine2D gl, Func<XYZ> pickEdgePoint)
             {
-                XYZ gridHandStart2D = new XYZ(gridLineHand.GetEndPoint(0).X, gridLineHand.GetEndPoint(0).Y, 0);
-                XYZ gridHandEnd2D = new XYZ(gridLineHand.GetEndPoint(1).X, gridLineHand.GetEndPoint(1).Y, 0);
-                XYZ dHand = (gridHandEnd2D - gridHandStart2D).Normalize();
+                if (gl?.Line2D == null) return;
 
-                XYZ pointToProjectHand = originXY;
+                XYZ lineOrigin = ToXY(gl.Line2D.Origin);
+                XYZ lineDir = SafeNormalize2D(gl.Line2D.Direction, XYZ.BasisY);
 
-                if (alignByEdges)
-                {
-                    double width = intersectionPoint.get_Parameter(intersectionPointWidthGuid).AsDouble();
-                    XYZ leftEdgeXY = originXY - handOrientationXY * (width / 2);
-                    XYZ rightEdgeXY = originXY + handOrientationXY * (width / 2);
+                XYZ pointToProject = alignByEdges ? pickEdgePoint() : originXY;
 
-                    pointToProjectHand = (leftEdgeXY - gridHandStart2D).GetLength() < (rightEdgeXY - gridHandStart2D).GetLength()
-                        ? leftEdgeXY : rightEdgeXY;
-                }
+                XYZ proj = ProjectPointToUnboundLine2D(pointToProject, lineOrigin, lineDir);
+                double currentDistance = (proj - pointToProject).GetLength();
 
-                XYZ projHandXY = ProjectPoint(pointToProjectHand, gridHandStart2D, dHand);
-                double currentHandDistance = (projHandXY - pointToProjectHand).GetLength();
-                double targetHandDistance = RoundToIncrement(currentHandDistance, roundHolePosition);
-                double deltaHand = targetHandDistance - currentHandDistance;
-                XYZ moveDirectionHand = (projHandXY - pointToProjectHand).Normalize();
+                double targetDistance = RoundToIncrement(currentDistance, roundHolePosition);
+                double delta = targetDistance - currentDistance;
 
-                finalMoveXY += moveDirectionHand * deltaHand;
+                if (Math.Abs(delta) < 1e-9) return;
+
+                XYZ moveDir = proj - pointToProject;
+                if (moveDir.GetLength() < 1e-9) return;
+
+                finalMoveXY += moveDir.Normalize() * delta;
             }
 
-            if (gridLineFacing != null)
-            {
-                XYZ gridFacingStart2D = new XYZ(gridLineFacing.GetEndPoint(0).X, gridLineFacing.GetEndPoint(0).Y, 0);
-                XYZ gridFacingEnd2D = new XYZ(gridLineFacing.GetEndPoint(1).X, gridLineFacing.GetEndPoint(1).Y, 0);
-                XYZ dFacing = (gridFacingEnd2D - gridFacingStart2D).Normalize();
-
-                XYZ pointToProjectFacing = originXY;
-
-                if (alignByEdges)
+            // Hand (ширина)
+            AccumulateMove(
+                gridHand,
+                () =>
                 {
-                    double height = intersectionPoint.get_Parameter(intersectionPointHeightGuid).AsDouble();
-                    XYZ frontEdgeXY = originXY + facingOrientationXY * (height / 2);
-                    XYZ backEdgeXY = originXY - facingOrientationXY * (height / 2);
+                    double width = intersectionPoint.get_Parameter(intersectionPointWidthGuid)?.AsDouble() ?? 0;
+                    if (width < 1e-9 || gridHand?.Line2D == null) return originXY;
 
-                    pointToProjectFacing = (frontEdgeXY - gridFacingStart2D).GetLength() < (backEdgeXY - gridFacingStart2D).GetLength()
-                        ? frontEdgeXY : backEdgeXY;
-                }
+                    XYZ left = originXY - handXY * (width / 2);
+                    XYZ right = originXY + handXY * (width / 2);
 
-                XYZ projFacingXY = ProjectPoint(pointToProjectFacing, gridFacingStart2D, dFacing);
-                double currentFacingDistance = (projFacingXY - pointToProjectFacing).GetLength();
-                double targetFacingDistance = RoundToIncrement(currentFacingDistance, roundHolePosition);
-                double deltaFacing = targetFacingDistance - currentFacingDistance;
-                XYZ moveDirectionFacing = (projFacingXY - pointToProjectFacing).Normalize();
+                    XYZ lineOrigin = ToXY(gridHand.Line2D.Origin);
+                    XYZ lineDir = SafeNormalize2D(gridHand.Line2D.Direction, XYZ.BasisY);
 
-                finalMoveXY += moveDirectionFacing * deltaFacing;
-            }
+                    XYZ leftProj = ProjectPointToUnboundLine2D(left, lineOrigin, lineDir);
+                    XYZ rightProj = ProjectPointToUnboundLine2D(right, lineOrigin, lineDir);
 
-            if (finalMoveXY.GetLength() > 0)
+                    double leftDist = (leftProj - left).GetLength();
+                    double rightDist = (rightProj - right).GetLength();
+
+                    return leftDist <= rightDist ? left : right;
+                });
+
+            // Facing (высота)
+            AccumulateMove(
+                gridFacing,
+                () =>
+                {
+                    double height = intersectionPoint.get_Parameter(intersectionPointHeightGuid)?.AsDouble() ?? 0;
+                    if (height < 1e-9 || gridFacing?.Line2D == null) return originXY;
+
+                    XYZ front = originXY + facingXY * (height / 2);
+                    XYZ back = originXY - facingXY * (height / 2);
+
+                    XYZ lineOrigin = ToXY(gridFacing.Line2D.Origin);
+                    XYZ lineDir = SafeNormalize2D(gridFacing.Line2D.Direction, XYZ.BasisY);
+
+                    XYZ frontProj = ProjectPointToUnboundLine2D(front, lineOrigin, lineDir);
+                    XYZ backProj = ProjectPointToUnboundLine2D(back, lineOrigin, lineDir);
+
+                    double frontDist = (frontProj - front).GetLength();
+                    double backDist = (backProj - back).GetLength();
+
+                    return frontDist <= backDist ? front : back;
+                });
+
+            if (finalMoveXY.GetLength() > 1e-9)
                 ElementTransformUtils.MoveElement(doc, intersectionPoint.Id, -finalMoveXY);
         }
-        private Grid GetClosestPerpendicularGrid(List<Grid> grids, XYZ point, XYZ orientation)
-        {
-            Grid closestGrid = null;
-            double closestDistance = double.MaxValue;
 
-            foreach (var grid in grids)
-            {
-                Line gridLine = grid.Curve as Line;
-                if (gridLine == null) continue;
-
-                // Проверяем перпендикулярность оси относительно указанного направления
-                double dotProduct = Math.Abs(gridLine.Direction.Normalize().DotProduct(orientation.Normalize()));
-                if (dotProduct > 1e-6) continue; // Если не перпендикулярна (скалярное произведение не близко к 0)
-
-                // Вычисляем расстояние от точки до оси
-                double distance = gridLine.Distance(point);
-                if (distance < closestDistance)
-                {
-                    closestDistance = distance;
-                    closestGrid = grid;
-                }
-            }
-
-            return closestGrid;
-        }
         private static async Task GetPluginStartInfo()
         {
-            // Получаем сборку, в которой выполняется текущий код
             Assembly thisAssembly = Assembly.GetExecutingAssembly();
             string assemblyName = "GloryHoleRefreshElevations";
             string assemblyNameRus = "Обновить отметки";
@@ -610,17 +679,12 @@ namespace GloryHoleRefreshElevations
 
             if (type != null)
             {
-                // Создание экземпляра класса
                 object instance = Activator.CreateInstance(type);
-
-                // Получение метода CollectPluginUsageAsync
                 var method = type.GetMethod("CollectPluginUsageAsync");
-
                 if (method != null)
                 {
-                    // Вызов асинхронного метода через reflection
                     Task task = (Task)method.Invoke(instance, new object[] { assemblyName, assemblyNameRus });
-                    await task;  // Ожидание завершения асинхронного метода
+                    await task;
                 }
             }
         }
