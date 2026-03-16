@@ -53,7 +53,7 @@ namespace GloryHoleRefreshElevations
             }
 
             // Проверяем оконные отверстия (категория OST_Windows)
-            if (elem is FamilyInstance windowInstance && elem.Category.Id.IntegerValue.Equals((int)BuiltInCategory.OST_Windows))
+            if (elem is FamilyInstance windowInstance && IsCategory(elem, BuiltInCategory.OST_Windows))
             {
                 string familyName = windowInstance.Symbol.FamilyName;
 
@@ -65,6 +65,19 @@ namespace GloryHoleRefreshElevations
             }
 
             return false;
+        }
+
+        private static bool IsCategory(Element element, BuiltInCategory builtInCategory)
+        {
+            var categoryId = element?.Category?.Id;
+            if (categoryId == null)
+                return false;
+
+#if R2019 || R2020 || R2021 || R2022 || R2023 || R2024
+            return categoryId.IntegerValue == (int)builtInCategory;
+#else
+            return categoryId.Value == new ElementId(builtInCategory).Value;
+#endif
         }
 
         public bool AllowReference(Reference reference, XYZ position)

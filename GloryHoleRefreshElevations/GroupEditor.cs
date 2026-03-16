@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Management.Instrumentation;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.ExtensibleStorage;
 
@@ -51,11 +50,11 @@ namespace GloryHoleRefreshElevations
 
             GetDataStorageMembers();
             if (_storageEntity == null)
-                throw new InstanceNotFoundException(
+                throw new InvalidOperationException(
                     $"No instance of a the GroupType \"{_groupName}\" is being edited");
 
             _pinned = _storageEntity.Get<bool>(_pinnedField);
-            _locationPoint = _storageEntity.Get<XYZ>(_locationPointField, UnitTypeId.Feet);
+            _locationPoint = GetStoredLocationPoint(_storageEntity, _locationPointField);
             _groupId = _storageEntity.Get<ElementId>(_groupIdField);
             _members = _storageEntity.Get<IList<ElementId>>(_membersField);
         }
@@ -210,7 +209,7 @@ namespace GloryHoleRefreshElevations
                 schemaBuilder.SetWriteAccessLevel(AccessLevel.Public);
                 schemaBuilder.AddSimpleField("GroupName", typeof(string));
                 schemaBuilder.AddSimpleField("Pinned", typeof(bool));
-                schemaBuilder.AddSimpleField("LocationPoint", typeof(XYZ)).SetSpec(SpecTypeId.Length);
+                AddLocationPointField(schemaBuilder);
                 schemaBuilder.AddSimpleField("GroupId", typeof(ElementId));
                 schemaBuilder.AddArrayField("Members", typeof(ElementId));
                 _schema = schemaBuilder.Finish();
@@ -251,11 +250,38 @@ namespace GloryHoleRefreshElevations
 
             if (groupName != null) _storageEntity.Set("GroupName", groupName);
             if (pinned != null) _storageEntity.Set("Pinned", (bool)pinned);
-            if (localPoint != null) _storageEntity.Set("LocationPoint", localPoint, UnitTypeId.Feet);
+            if (localPoint != null) SetStoredLocationPoint(_storageEntity, localPoint);
             if (groupId != null) _storageEntity.Set("GroupId", groupId);
             if (members != null) _storageEntity.Set("Members", (IList<ElementId>)members.Distinct().ToList());
 
             _dataStorage.SetEntity(_storageEntity);
+        }
+
+        private static void AddLocationPointField(SchemaBuilder schemaBuilder)
+        {
+#if R2019 || R2020
+            schemaBuilder.AddSimpleField("LocationPoint", typeof(XYZ)).SetUnitType(UnitType.UT_Length);
+#else
+            schemaBuilder.AddSimpleField("LocationPoint", typeof(XYZ)).SetSpec(SpecTypeId.Length);
+#endif
+        }
+
+        private static XYZ GetStoredLocationPoint(Entity entity, Field field)
+        {
+#if R2019 || R2020
+            return entity.Get<XYZ>(field, DisplayUnitType.DUT_DECIMAL_FEET);
+#else
+            return entity.Get<XYZ>(field, UnitTypeId.Feet);
+#endif
+        }
+
+        private static void SetStoredLocationPoint(Entity entity, XYZ locationPoint)
+        {
+#if R2019 || R2020
+            entity.Set("LocationPoint", locationPoint, DisplayUnitType.DUT_DECIMAL_FEET);
+#else
+            entity.Set("LocationPoint", locationPoint, UnitTypeId.Feet);
+#endif
         }
 
         public static void DeleteDataStorageSchemaEntity(Document doc, string groupName)
@@ -281,7 +307,7 @@ namespace GloryHoleRefreshElevations
                 }
             }
 
-            throw new InstanceNotFoundException($"DataStorage for group \"{groupName}\" not found");
+            throw new InvalidOperationException($"DataStorage for group \"{groupName}\" not found");
         }
 
         #endregion

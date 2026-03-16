@@ -131,9 +131,9 @@ namespace GloryHoleRefreshElevations
                     var fi = doc.GetElement(roomRef) as FamilyInstance;
                     if (fi == null) continue;
 
-                    if (fi.Category.Id.IntegerValue == (int)BuiltInCategory.OST_GenericModel)
+                    if (IsCategory(fi, BuiltInCategory.OST_GenericModel))
                         intersectionPointFamilyInstanceList.Add(fi);
-                    else if (fi.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Windows)
+                    else if (IsCategory(fi, BuiltInCategory.OST_Windows))
                         intersectionPointWeandrevitList.Add(fi);
                 }
             }
@@ -348,6 +348,19 @@ namespace GloryHoleRefreshElevations
                 return Math.Round(value, 6);
 
             return Math.Round(Math.Round(value * 304.8, 2) / increment) * increment / 304.8;
+        }
+
+        private static bool IsCategory(Element element, BuiltInCategory builtInCategory)
+        {
+            var categoryId = element?.Category?.Id;
+            if (categoryId == null)
+                return false;
+
+#if R2019 || R2020 || R2021 || R2022 || R2023 || R2024
+            return categoryId.IntegerValue == (int)builtInCategory;
+#else
+            return categoryId.Value == new ElementId(builtInCategory).Value;
+#endif
         }
 
         private static double MmToFt(double mm) => mm / MM_PER_FOOT;

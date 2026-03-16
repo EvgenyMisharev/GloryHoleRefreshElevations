@@ -1,66 +1,262 @@
-﻿<Window x:Class="GloryHoleRefreshElevations.GloryHoleRefreshElevationsWPF"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:GloryHoleRefreshElevations"
-             mc:Ignorable="d" 
-             Title="Обновить отметки" Height="400" Width="400"  
-             MinHeight="400" MinWidth="400" MaxHeight="400" MaxWidth="400"
-             WindowStyle="SingleBorderWindow" ResizeMode="NoResize" Icon="Resources/citrus.ico" WindowStartupLocation="CenterScreen" KeyDown="GloryHoleRefreshElevationsWPF_KeyDown">
-    <Grid>
-        <GroupBox x:Name="groupBox_RefreshElevationsOption" Header="Выберите опцию:" Margin="10,10,10,50" VerticalAlignment="Top" BorderBrush="#FFABADB3" Height="60">
-            <Grid>
+<Window x:Class="GloryHoleRefreshElevations.GloryHoleRefreshElevationsWPF"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:GloryHoleRefreshElevations"
+        mc:Ignorable="d"
+        Title="Обновить отметки"
+        Height="460"
+        Width="430"
+        MinHeight="460"
+        MinWidth="430"
+        MaxHeight="460"
+        MaxWidth="430"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="NoResize"
+        Icon="Resources/citrus.ico"
+        WindowStartupLocation="CenterScreen"
+        KeyDown="GloryHoleRefreshElevationsWPF_KeyDown"
+        FontFamily="{DynamicResource BaseFont}"
+        FontSize="{DynamicResource FontSizeBase}"
+        Foreground="{DynamicResource TextBrush}"
+        Background="{DynamicResource PageBgBrush}"
+        TextOptions.TextFormattingMode="Ideal"
+        TextOptions.TextRenderingMode="Auto"
+        TextOptions.TextHintingMode="Fixed"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        Language="ru-RU">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="CitrusTheme/CitrusTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="10,0,10,10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <GroupBox x:Name="groupBox_RefreshElevationsOption"
+                  Grid.Row="0"
+                  Header="Выберите опцию:"
+                  Margin="0,0,0,8">
+            <Grid Margin="8,0,8,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="200*"/>
-                    <ColumnDefinition Width="200*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <RadioButton x:Name="rbt_AllProject" Content="Во всем проекте" Margin="10,10,0,10" IsChecked="True" HorizontalAlignment="Center" VerticalContentAlignment="Center" Padding="5,0,0,0" VerticalAlignment="Center"/>
-                <RadioButton x:Name="rbt_SelectedItems" Content="В выбранных элементах" Grid.Column="1" Margin="10,10,0,10" HorizontalAlignment="Center" VerticalContentAlignment="Center" Padding="5,0,0,0" VerticalAlignment="Center"/>
+
+                <RadioButton x:Name="rbt_AllProject"
+                             Grid.Column="0"
+                             Content="Во всем проекте"
+                             Height="32"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             VerticalContentAlignment="Center"
+                             Padding="5,0,0,0"
+                             IsChecked="True"/>
+
+                <RadioButton x:Name="rbt_SelectedItems"
+                             Grid.Column="1"
+                             Content="В выбранных элементах"
+                             Height="32"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             VerticalContentAlignment="Center"
+                             Padding="5,0,0,0"/>
             </Grid>
         </GroupBox>
-        <GroupBox x:Name="groupBox_RoundHolesPosition" Header="Округлять отметки отверстий в стенах:" Height="60" Margin="10,75,10,0" VerticalAlignment="Top" BorderBrush="#FFABADB3">
-            <Grid>
+
+        <GroupBox x:Name="groupBox_RoundHolesPosition"
+                  Grid.Row="1"
+                  Header="Округлять отметки отверстий в стенах:"
+                  Margin="0,0,0,8">
+            <Grid Margin="8,0,8,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="175*"/>
-                    <ColumnDefinition Width="175*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <RadioButton x:Name="radioButton_RoundHolesPositionYes" Content="Да" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="True" Height="25" Width="45" VerticalContentAlignment="Center" Checked="radioButton_RoundHolesPosition_Checked" Grid.Column="0" />
-                <RadioButton x:Name="radioButton_RoundHolesPositionNo" Content="Нет" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="1" Width="45" Height="25" VerticalContentAlignment="Center" IsChecked="True" Checked="radioButton_RoundHolesPosition_Checked"/>
+
+                <RadioButton x:Name="radioButton_RoundHolesPositionYes"
+                             Grid.Column="0"
+                             Content="Да"
+                             Width="45"
+                             Height="32"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             VerticalContentAlignment="Center"
+                             IsChecked="True"
+                             Checked="radioButton_RoundHolesPosition_Checked"/>
+
+                <RadioButton x:Name="radioButton_RoundHolesPositionNo"
+                             Grid.Column="1"
+                             Content="Нет"
+                             Width="45"
+                             Height="32"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             VerticalContentAlignment="Center"
+                             Checked="radioButton_RoundHolesPosition_Checked"/>
             </Grid>
         </GroupBox>
-        <Label x:Name="label_RoundHolePosition" Content="Округлять отметки отверстий до:" HorizontalAlignment="Left" Margin="10,140,0,0" VerticalAlignment="Top" Width="220" Height="26" VerticalContentAlignment="Center" IsEnabled="False"/>
-        <TextBox x:Name="textBox_RoundHolePositionIncrement" HorizontalAlignment="Left" Height="26" Margin="230,140,0,0" TextWrapping="Wrap" Text="5" VerticalAlignment="Top" Width="40" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" IsEnabled="False" SpellCheck.IsEnabled="True"/>
-        <Label x:Name="label_RoundHolePositionMM" Content="мм" HorizontalAlignment="Left" Margin="270,140,0,0" VerticalAlignment="Top" Width="30" Height="26" VerticalContentAlignment="Center" IsEnabled="False"/>
 
-        <GroupBox x:Name="groupBox_RoundHolesLocation" Header="Округлять положение отверстий:" Height="60" Margin="10,175,10,-2" VerticalAlignment="Top" BorderBrush="#FFABADB3">
-            <Grid>
+        <Grid Grid.Row="2" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="240"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="30"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Label x:Name="label_RoundHolePosition"
+                   Grid.Column="0"
+                   Content="Округлять отметки отверстий до:"
+                   Height="32"
+                   VerticalContentAlignment="Center"
+                   IsEnabled="False"/>
+
+            <TextBox x:Name="textBox_RoundHolePositionIncrement"
+                     Grid.Column="1"
+                     Text="5"
+                     Width="50"
+                     Height="32"
+                     VerticalContentAlignment="Center"
+                     HorizontalContentAlignment="Center"
+                     TextWrapping="Wrap"
+                     SpellCheck.IsEnabled="True"
+                     IsEnabled="False"/>
+
+            <Label x:Name="label_RoundHolePositionMM"
+                   Grid.Column="2"
+                   Content="мм"
+                   Height="32"
+                   VerticalContentAlignment="Center"
+                   IsEnabled="False"/>
+        </Grid>
+
+        <GroupBox x:Name="groupBox_RoundHolesLocation"
+                  Grid.Row="3"
+                  Header="Округлять положение отверстий:"
+                  Margin="0,0,0,8">
+            <Grid Margin="8,0,8,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="175*"/>
-                    <ColumnDefinition Width="175*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <RadioButton x:Name="radioButton_RoundHolesLocationYes" Content="Да" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="False" Height="25" Width="45" VerticalContentAlignment="Center" Checked="radioButton_RoundHolesLocation_Checked" Grid.Column="0" />
-                <RadioButton x:Name="radioButton_RoundHolesLocationNo" Content="Нет" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Column="1" Width="45" Height="25" VerticalContentAlignment="Center" IsChecked="True" Checked="radioButton_RoundHolesLocation_Checked"/>
+
+                <RadioButton x:Name="radioButton_RoundHolesLocationYes"
+                             Grid.Column="0"
+                             Content="Да"
+                             Width="45"
+                             Height="32"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             VerticalContentAlignment="Center"
+                             IsChecked="False"
+                             Checked="radioButton_RoundHolesLocation_Checked"/>
+
+                <RadioButton x:Name="radioButton_RoundHolesLocationNo"
+                             Grid.Column="1"
+                             Content="Нет"
+                             Width="45"
+                             Height="32"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             VerticalContentAlignment="Center"
+                             IsChecked="True"
+                             Checked="radioButton_RoundHolesLocation_Checked"/>
             </Grid>
         </GroupBox>
 
-        <Label x:Name="label_RoundHoleLocation" Content="Округлять координаты отверстий до:" HorizontalAlignment="Left" Margin="10,240,0,0" VerticalAlignment="Top" Width="220" Height="26" VerticalContentAlignment="Center" IsEnabled="False"/>
-        <TextBox x:Name="textBox_RoundHoleLocationIncrement" HorizontalAlignment="Left" Height="26" Margin="230,240,0,0" TextWrapping="Wrap" Text="5" VerticalAlignment="Top" Width="40" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" IsEnabled="False" SpellCheck.IsEnabled="True"/>
-        <Label x:Name="label_RoundHoleLocationMM" Content="мм" HorizontalAlignment="Left" Margin="270,240,0,0" VerticalAlignment="Top" Width="30" Height="26" VerticalContentAlignment="Center" IsEnabled="False"/>
+        <Grid Grid.Row="4" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="240"/>
+                <ColumnDefinition Width="50"/>
+                <ColumnDefinition Width="30"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
+            <Label x:Name="label_RoundHoleLocation"
+                   Grid.Column="0"
+                   Content="Округлять координаты отверстий до:"
+                   Height="32"
+                   VerticalContentAlignment="Center"
+                   IsEnabled="False"/>
 
-        <CheckBox x:Name="checkBox_UpdaterOn" Content="Обновлять отметки автоматически" VerticalAlignment="Bottom" Margin="10,250,10,50" Height="25" HorizontalAlignment="Left" Grid.Row="4" VerticalContentAlignment="Center">
+            <TextBox x:Name="textBox_RoundHoleLocationIncrement"
+                     Grid.Column="1"
+                     Text="5"
+                     Width="50"
+                     Height="32"
+                     VerticalContentAlignment="Center"
+                     HorizontalContentAlignment="Center"
+                     TextWrapping="Wrap"
+                     SpellCheck.IsEnabled="True"
+                     IsEnabled="False"/>
+
+            <Label x:Name="label_RoundHoleLocationMM"
+                   Grid.Column="2"
+                   Content="мм"
+                   Height="32"
+                   VerticalContentAlignment="Center"
+                   IsEnabled="False"/>
+        </Grid>
+
+        <CheckBox x:Name="checkBox_UpdaterOn"
+                  Grid.Row="5"
+                  Content="Обновлять отметки автоматически"
+                  Height="32"
+                  VerticalAlignment="Top"
+                  VerticalContentAlignment="Center"
+                  Margin="0,0,0,10">
             <CheckBox.ToolTip>
-                <ToolTip  MaxWidth="200">
+                <ToolTip MaxWidth="220">
                     <StackPanel>
                         <TextBlock Text="Автообновление" FontWeight="Bold"/>
-                        <TextBlock Text='При активированной опции плагин будет обновлять значения параметров автоматически в фоновом режиме.' TextWrapping="Wrap"/>
+                        <TextBlock Text="При активированной опции плагин будет обновлять значения параметров автоматически в фоновом режиме."
+                                   TextWrapping="Wrap"/>
                     </StackPanel>
                 </ToolTip>
             </CheckBox.ToolTip>
         </CheckBox>
 
-        <Button x:Name="btn_Ok" Content="Ок" HorizontalAlignment="Right" Margin="0,0,125,10" VerticalAlignment="Bottom" Width="100" Height="25" Click="btn_Ok_Click"/>
-        <Button x:Name="btn_Cancel" Content="Отмена" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="100" Height="25" Click="btn_Cancel_Click"/>
+        <Grid Grid.Row="6" Margin="0,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="10"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="btn_Ok"
+                    Grid.Column="1"
+                    Content="Ок"
+                    Width="100"
+                    Height="32"
+                    Padding="10,0,10,0"
+                    IsDefault="True"
+                    Click="btn_Ok_Click"/>
+
+            <Button x:Name="btn_Cancel"
+                    Grid.Column="3"
+                    Content="Отмена"
+                    Width="100"
+                    Height="32"
+                    Padding="10,0,10,0"
+                    IsCancel="True"
+                    Click="btn_Cancel_Click"
+                    Style="{StaticResource ButtonOutline}"/>
+        </Grid>
     </Grid>
 </Window>
